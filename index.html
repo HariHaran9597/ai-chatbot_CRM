@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 20px;
+        }
+        .chat-title {
+            font-size: 1.5em;
+            color: #333;
+            margin: 0;
+        }
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-box {
+            height: 400px;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            position: relative;
+        }
+        .user-message {
+            margin-left: auto;
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        .bot-message {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+            white-space: pre-line;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        input[type="text"], input[type="email"], textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 12px 20px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .loading {
+            display: none;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .ticket-form {
+            display: none;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        .ticket-form.active {
+            display: block;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1 class="chat-title">AI Customer Support</h1>
+            <div class="chat-actions">
+                <button onclick="clearChat()" title="Clear Chat">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+                <button onclick="toggleTicketForm()" title="Create Support Ticket">
+                    <i class="fas fa-ticket-alt"></i> New Ticket
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-box" id="chat-box">
+            <!-- Chat messages will appear here -->
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+        </div>
+
+        <!-- Support Ticket Form -->
+        <div class="ticket-form" id="ticket-form">
+            <h3>Create Support Ticket</h3>
+            <input type="text" id="ticket-subject" placeholder="Subject">
+            <textarea id="ticket-description" placeholder="Describe your issue"></textarea>
+            <div class="button-group">
+                <button onclick="createTicket()">
+                    <i class="fas fa-paper-plane"></i> Submit Ticket
+                </button>
+                <button onclick="toggleTicketForm()" style="background: #6c757d;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-group">
+                <input type="email" id="user-email" placeholder="Enter your email...">
+                <input type="text" id="user-input" placeholder="Type your message...">
+            </div>
+            <div class="button-group">
+                <button onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store chat history
+        let chatHistory = [];
+
+        function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            const userEmail = document.getElementById("user-email").value;
+            if (!userInput || !userEmail) {
+                alert("Please enter both email and message");
+                return;
+            }
+
+            // Add user's message to chat history and display
+            addMessageToChat('user', userInput);
+
+            // Clear the input field
+            document.getElementById("user-input").value = "";
+
+            // Show loading spinner
+            document.getElementById("loading").style.display = "flex";
+
+            // Send the message and email to the Flask backend
+            fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ message: userInput, email: userEmail }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading spinner
+                document.getElementById("loading").style.display = "none";
+
+                // Add bot's response to chat history and display
+                addMessageToChat('bot', data.response);
+
+                // Save chat history to localStorage
+                saveChatHistory();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("loading").style.display = "none";
+                addMessageToChat('bot', 'Sorry, an error occurred. Please try again.');
+            });
+        }
+
+        function addMessageToChat(type, content) {
+            const message = {
+                type: type,
+                content: content,
+                timestamp: new Date().toISOString()
+            };
+            chatHistory.push(message);
+
+            const chatBox = document.getElementById("chat-box");
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${type}-message`;
+            
+            // Add message content
+            const contentDiv = document.createElement("div");
+            contentDiv.textContent = content;
+            messageDiv.appendChild(contentDiv);
+            
+            // Add timestamp
+            const timestampDiv = document.createElement("div");
+            timestampDiv.className = "timestamp";
+            timestampDiv.textContent = new Date().toLocaleTimeString();
+            messageDiv.appendChild(timestampDiv);
+            
+            chatBox.appendChild(messageDiv);
+
+            // Scroll to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function clearChat() {
+            if (confirm("Are you sure you want to clear the chat history?")) {
+                const chatBox = document.getElementById("chat-box");
+                chatBox.innerHTML = '';
+                chatHistory = [];
+                localStorage.removeItem('chatHistory');
+            }
+        }
+
+        function saveChatHistory() {
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        }
+
+        function loadChatHistory() {
+            const saved = localStorage.getItem('chatHistory');
+            if (saved) {
+                chatHistory = JSON.parse(saved);
+                chatHistory.forEach(message => {
+                    addMessageToChat(message.type, message.content);
+                });
+            }
+        }
+
+        function toggleTicketForm() {
+            const form = document.getElementById('ticket-form');
+            form.classList.toggle('active');
+        }
+
+        function createTicket() {
+            const subject = document.getElementById('ticket-subject').value;
+            const description = document.getElementById('ticket-description').value;
+            const email = document.getElementById('user-email').value;
+
+            if (!subject || !description || !email) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            fetch('/create_ticket', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subject: subject,
+                    description: description,
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                addMessageToChat('bot', `Ticket created successfully! Ticket ID: ${data.ticket_id}`);
+                toggleTicketForm();
+                document.getElementById('ticket-subject').value = '';
+                document.getElementById('ticket-description').value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessageToChat('bot', 'Failed to create ticket. Please try again.');
+            });
+        }
+
+        // Add keyboard event listener for sending messages
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Load chat history when page loads
+        document.addEventListener('DOMContentLoaded', loadChatHistory);
+    </script>
+</body>
+</html>
